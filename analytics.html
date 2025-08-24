@@ -1,38 +1,461 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Finance Tracker - Analytics</title>
-<style>
-  body{margin:0;background:#2f2f2f;color:#fff;font-family:sans-serif;}
-  header{text-align:center;padding:1rem;font-size:1.3rem;}
-  .list{padding:1rem;}
-  canvas{background:#3b3b3b;border-radius:10px;margin:1rem auto;display:block;}
-  nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#1f1f1f;padding:.5rem 0;}
-  nav button{background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Tracker - Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+      animation: gradientShift 15s ease infinite;
+      background-size: 200% 200%;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    header {
+      padding: 1.5rem;
+      text-align: center;
+      background: #25253b;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .chart-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .chart-btn, .filter-btn {
+      padding: 0.6rem 1.2rem;
+      background: linear-gradient(45deg, #6200ea, #7c4dff);
+      border: none;
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .chart-btn:hover, .filter-btn:hover {
+      background: linear-gradient(45deg, #7c4dff, #b388ff);
+      transform: translateY(-2px);
+    }
+
+    .chart-btn.active, .filter-btn.active {
+      background: linear-gradient(45deg, #3700b3, #6200ea);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .list {
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #d0d0d0;
+      background: #2a2a3d;
+      border-radius: 12px;
+      margin: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.5s ease;
+      transition: transform 0.3s ease;
+    }
+
+    .list:hover {
+      transform: translateY(-3px);
+    }
+
+    .list .stat {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+      font-size: 1.1rem;
+    }
+
+    .list .stat i {
+      font-size: 1.2rem;
+    }
+
+    .income { color: #34c759; }
+    .expense { color: #f44336; }
+
+    canvas {
+      background: #2a2a3d;
+      border-radius: 12px;
+      margin: 1.5rem auto;
+      display: block;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      max-width: 90%;
+      transition: transform 0.3s ease;
+      position: relative;
+    }
+
+    canvas:hover {
+      transform: translateY(-3px);
+    }
+
+    .tooltip {
+      position: absolute;
+      background: #25253b;
+      color: #ffffff;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1001;
+    }
+
+    .category-section {
+      margin: 1.5rem;
+      padding: 1.5rem;
+      background: #2a2a3d;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .category-section h3 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #25253b;
+      padding: 1rem 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      color: #d0d0d0;
+      font-size: 1.8rem;
+      cursor: pointer;
+      padding: 0.6rem;
+      transition: all 0.3s ease;
+    }
+
+    nav button:hover {
+      color: #7c4dff;
+      transform: scale(1.15);
+    }
+
+    nav button.active {
+      color: #7c4dff;
+      transform: scale(1.1);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (min-width: 768px) {
+      header h1 { font-size: 2.2rem; }
+      .list, .category-section { font-size: 1.3rem; margin: 1.5rem; }
+      canvas { max-width: 600px; }
+      nav button { font-size: 2rem; }
+      .chart-btn, .filter-btn { font-size: 1.1rem; padding: 0.7rem 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+      header h1 { font-size: 1.8rem; }
+      .list, .category-section { font-size: 1rem; padding: 1rem; }
+      canvas { width: 100%; height: 180px; }
+      .chart-btn, .filter-btn { font-size: 0.9rem; padding: 0.5rem 1rem; }
+    }
+  </style>
 </head>
 <body>
-<header>Analytics</header>
-<canvas id="flowChart" width="300" height="200"></canvas>
-<div class="list" id="summary"></div>
-<nav>
-  <button onclick="go('index.html')">🏠</button>
-  <button onclick="go('accounts.html')">💳</button>
-  <button onclick="go('analytics.html')">📊</button>
-</nav>
+  <header>
+    <h1 id="title">Analytics</h1>
+  </header>
+  <main>
+    <div class="chart-controls">
+      <button class="chart-btn active" onclick="drawChart('bar')">Bar Chart</button>
+      <button class="chart-btn" onclick="drawChart('pie')">Pie Chart</button>
+      <button class="chart-btn" onclick="drawChart('line')">Line Chart</button>
+      <button class="filter-btn" onclick="filterData('all')">All Time</button>
+      <button class="filter-btn active" onclick="filterData('month')">Month</button>
+      <button class="filter-btn" onclick="filterData('week')">Week</button>
+    </div>
+    <canvas id="flowChart" width="300" height="200"></canvas>
+    <div class="list" id="summary">
+      <div class="stat income"><i class="fas fa-arrow-up"></i> <span id="incomeText">Monthly Income:</span> <span id="incomeValue"></span></div>
+      <div class="stat expense"><i class="fas fa-arrow-down"></i> <span id="expenseText">Monthly Expense:</span> <span id="expenseValue"></span></div>
+    </div>
+    <div class="category-section">
+      <h3 id="categoryTitle">Expenses by Category</h3>
+      <canvas id="categoryChart" width="300" height="200"></canvas>
+    </div>
+  </main>
+  <nav>
+    <button onclick="go('index.html')" id="homeTab"><i class="fas fa-home"></i></button>
+    <button onclick="go('accounts.html')" id="accountsTab"><i class="fas fa-wallet"></i></button>
+    <button onclick="go('analytics.html')" id="analyticsTab" class="active"><i class="fas fa-chart-pie"></i></button>
+  </nav>
 
-<script>
-let transactions=JSON.parse(localStorage.getItem("transactions")||"[]");
-let ctx=document.getElementById("flowChart").getContext("2d");
-let income=0,expense=0;
-transactions.forEach(t=>{if(t.type=="income")income+=t.amount;else expense+=t.amount;});
-ctx.fillStyle="#4caf50";ctx.fillRect(20,180-income/10,50,income/10);
-ctx.fillStyle="#f44336";ctx.fillRect(100,180-expense/10,50,expense/10);
-ctx.fillStyle="#fff";ctx.fillText("Income",20,195);ctx.fillText("Expense",100,195);
+  <script>
+    let transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+    let ctx = document.getElementById("flowChart").getContext("2d");
+    let ctxCategory = document.getElementById("categoryChart").getContext("2d");
+    let income = 0, expense = 0, chartType = 'bar', filterType = 'month';
+    let filteredTransactions = [];
+    const categories = ["Work", "Extra", "Fun", "Health", "Family"];
+    const categoryColors = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#ffeead"];
 
-document.getElementById("summary").innerText="Monthly Income: "+income+" | Expense: "+expense;
-function go(p){window.location=p;}
-</script>
+    function filterData(period) {
+      const now = Date.now();
+      const oneMonth = 30 * 24 * 60 * 60 * 1000;
+      const oneWeek = 7 * 24 * 60 * 60 * 1000;
+      filteredTransactions = transactions.filter(t => {
+        if (period === 'all') return true;
+        if (period === 'month') return now - t.date <= oneMonth;
+        if (period === 'week') return now - t.date <= oneWeek;
+      });
+
+      income = 0;
+      expense = 0;
+      filteredTransactions.forEach(t => {
+        if (t.type === "income") income += t.amount;
+        else expense += t.amount;
+      });
+
+      updateSummary();
+      drawChart(chartType);
+      drawCategoryChart();
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.filter-btn[onclick="filterData('${period}')"]`).classList.add('active');
+    }
+
+    function drawChart(type) {
+      chartType = type;
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+      if (type === 'bar') {
+        ctx.fillStyle = "#34c759";
+        ctx.fillRect(20, 180 - income / 10, 50, income / 10);
+        ctx.fillStyle = "#f44336";
+        ctx.fillRect(100, 180 - expense / 10, 50, expense / 10);
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px Inter";
+        ctx.fillText("Income", 20, 195);
+        ctx.fillText("Expense", 100, 195);
+      } else if (type === 'pie') {
+        let total = income + expense;
+        let startAngle = 0;
+        if (total === 0) return;
+
+        ctx.beginPath();
+        ctx.fillStyle = "#34c759";
+        ctx.moveTo(150, 100);
+        ctx.arc(150, 100, 80, startAngle, startAngle + (income / total) * 2 * Math.PI);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = "#f44336";
+        ctx.moveTo(150, 100);
+        ctx.arc(150, 100, 80, startAngle + (income / total) * 2 * Math.PI, startAngle + 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px Inter";
+        ctx.fillText("Income", 50, 50);
+        ctx.fillText("Expense", 200, 50);
+      } else if (type === 'line') {
+        let days = 7;
+        let dailyIncome = new Array(days).fill(0);
+        let dailyExpense = new Array(days).fill(0);
+        const oneDay = 24 * 60 * 60 * 1000;
+        const now = Date.now();
+
+        filteredTransactions.forEach(t => {
+          let dayIndex = Math.floor((now - t.date) / oneDay);
+          if (dayIndex < days) {
+            if (t.type === "income") dailyIncome[days - 1 - dayIndex] += t.amount;
+            else dailyExpense[days - 1 - dayIndex] += t.amount;
+          }
+        });
+
+        ctx.beginPath();
+        ctx.strokeStyle = "#34c759";
+        ctx.lineWidth = 3;
+        ctx.moveTo(20, 180 - dailyIncome[0] / 10);
+        for (let i = 1; i < days; i++) {
+          ctx.lineTo(20 + (i * 260 / (days - 1)), 180 - dailyIncome[i] / 10);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "#f44336";
+        ctx.moveTo(20, 180 - dailyExpense[0] / 10);
+        for (let i = 1; i < days; i++) {
+          ctx.lineTo(20 + (i * 260 / (days - 1)), 180 - dailyExpense[i] / 10);
+        }
+        ctx.stroke();
+
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px Inter";
+        ctx.fillText("Income", 20, 30);
+        ctx.fillText("Expense", 20, 50);
+      }
+
+      document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.chart-btn[onclick="drawChart('${type}')"]`).classList.add('active');
+    }
+
+    function drawCategoryChart() {
+      ctxCategory.clearRect(0, 0, ctxCategory.canvas.width, ctxCategory.canvas.height);
+      let categoryTotals = categories.reduce((acc, cat) => ({ ...acc, [cat]: 0 }), {});
+      filteredTransactions.forEach(t => {
+        if (t.type === "expense" && categories.includes(t.cat)) {
+          categoryTotals[t.cat] += t.amount;
+        }
+      });
+
+      let total = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
+      let startAngle = 0;
+      if (total === 0) return;
+
+      categories.forEach((cat, i) => {
+        let slice = (categoryTotals[cat] / total) * 2 * Math.PI;
+        ctxCategory.beginPath();
+        ctxCategory.fillStyle = categoryColors[i];
+        ctxCategory.moveTo(150, 100);
+        ctxCategory.arc(150, 100, 80, startAngle, startAngle + slice);
+        ctxCategory.fill();
+        startAngle += slice;
+      });
+
+      ctxCategory.fillStyle = "#fff";
+      ctxCategory.font = "12px Inter";
+      categories.forEach((cat, i) => {
+        ctxCategory.fillText(cat, 20, 30 + i * 20);
+      });
+    }
+
+    function updateSummary() {
+      document.getElementById("incomeValue").innerText = income;
+      document.getElementById("expenseValue").innerText = expense;
+      document.getElementById("incomeText").innerText = texts.income[lang];
+      document.getElementById("expenseText").innerText = texts.expense[lang];
+      document.getElementById("categoryTitle").innerText = texts.categoryTitle[lang];
+    }
+
+    function go(p) { window.location = p; }
+
+    const texts = {
+      title: { en: "Analytics", ru: "Аналитика" },
+      income: { en: "Monthly Income:", ru: "Месячный доход:" },
+      expense: { en: "Monthly Expense:", ru: "Месячный расход:" },
+      categoryTitle: { en: "Expenses by Category", ru: "Расходы по категориям" }
+    };
+
+    let lang = localStorage.getItem("lang") || "en";
+    function applyLang() {
+      document.getElementById("title").innerText = texts.title[lang];
+      updateSummary();
+    }
+
+    // Tooltip functionality
+    const canvas = document.getElementById("flowChart");
+    const tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    document.body.appendChild(tooltip);
+
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      if (chartType === "bar") {
+        if (x >= 20 && x <= 70 && y <= 180 && y >= 180 - income / 10) {
+          tooltip.style.opacity = "1";
+          tooltip.style.left = `${e.clientX + 10}px`;
+          tooltip.style.top = `${e.clientY + 10}px`;
+          tooltip.innerText = `Income: ${income}`;
+        } else if (x >= 100 && x <= 150 && y <= 180 && y >= 180 - expense / 10) {
+          tooltip.style.opacity = "1";
+          tooltip.style.left = `${e.clientX + 10}px`;
+          tooltip.style.top = `${e.clientY + 10}px`;
+          tooltip.innerText = `Expense: ${expense}`;
+        } else {
+          tooltip.style.opacity = "0";
+        }
+      } else if (chartType === "pie") {
+        const dx = x - 150;
+        const dy = y - 100;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= 80) {
+          let angle = Math.atan2(dy, dx);
+          if (angle < 0) angle += 2 * Math.PI;
+          const total = income + expense;
+          const incomeAngle = (income / total) * 2 * Math.PI;
+          tooltip.style.opacity = "1";
+          tooltip.style.left = `${e.clientX + 10}px`;
+          tooltip.style.top = `${e.clientY + 10}px`;
+          tooltip.innerText = angle < incomeAngle ? `Income: ${income}` : `Expense: ${expense}`;
+        } else {
+          tooltip.style.opacity = "0";
+        }
+      } else {
+        tooltip.style.opacity = "0";
+      }
+    });
+
+    canvas.addEventListener("mouseout", () => {
+      tooltip.style.opacity = "0";
+    });
+
+    filterData('month');
+    applyLang();
+  </script>
 </body>
 </html>
