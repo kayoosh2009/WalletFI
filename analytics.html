@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Finance Tracker - Analytics</title>
+<style>
+  body{margin:0;background:#2f2f2f;color:#fff;font-family:sans-serif;}
+  header{text-align:center;padding:1rem;font-size:1.3rem;}
+  .list{padding:1rem;}
+  canvas{background:#3b3b3b;border-radius:10px;margin:1rem auto;display:block;}
+  nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#1f1f1f;padding:.5rem 0;}
+  nav button{background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;}
+</style>
+</head>
+<body>
+<header>Analytics</header>
+<canvas id="flowChart" width="300" height="200"></canvas>
+<div class="list" id="summary"></div>
+<nav>
+  <button onclick="go('index.html')">🏠</button>
+  <button onclick="go('accounts.html')">💳</button>
+  <button onclick="go('analytics.html')">📊</button>
+</nav>
+
+<script>
+let transactions=JSON.parse(localStorage.getItem("transactions")||"[]");
+let ctx=document.getElementById("flowChart").getContext("2d");
+let income=0,expense=0;
+transactions.forEach(t=>{if(t.type=="income")income+=t.amount;else expense+=t.amount;});
+ctx.fillStyle="#4caf50";ctx.fillRect(20,180-income/10,50,income/10);
+ctx.fillStyle="#f44336";ctx.fillRect(100,180-expense/10,50,expense/10);
+ctx.fillStyle="#fff";ctx.fillText("Income",20,195);ctx.fillText("Expense",100,195);
+
+document.getElementById("summary").innerText="Monthly Income: "+income+" | Expense: "+expense;
+function go(p){window.location=p;}
+</script>
+</body>
+</html>
