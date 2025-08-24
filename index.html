@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Finance Tracker - Home</title>
+<style>
+  body {margin:0;font-family:sans-serif;background:#2f2f2f;color:#fff;transition:all .3s;}
+  header{padding:1rem;text-align:center;font-size:1.3rem;}
+  .balance{font-size:2rem;text-align:center;margin:1rem 0;}
+  .btn{display:block;margin:.5rem auto;padding:.7rem 1.2rem;background:#444;border:none;border-radius:8px;color:#fff;cursor:pointer;transition:.3s;}
+  .btn:hover{background:#666;}
+  .floating{position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#3b3b3b;padding:1rem;border-radius:12px;display:none;width:80%;}
+  .input{width:90%;margin:.3rem auto;padding:.5rem;border-radius:6px;border:none;}
+  nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#1f1f1f;padding:.5rem 0;}
+  nav button{background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;}
+  .fade-in{animation:fadein .4s;}
+  @keyframes fadein{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<header id="title">Finance Tracker</header>
+<div class="balance" id="totalBalance">$0</div>
+<button class="btn" id="incomeBtn">+ Income</button>
+<button class="btn" id="expenseBtn">- Expense</button>
+<button class="btn" id="settingsBtn">⚙ Settings</button>
+
+<div class="floating fade-in" id="transactionModal">
+  <h3 id="modalTitle">Add Transaction</h3>
+  <input type="number" class="input" id="amount" placeholder="Amount">
+  <input type="text" class="input" id="comment" placeholder="Comment">
+  <select class="input" id="accountSelect"></select>
+  <select class="input" id="categorySelect"></select>
+  <button class="btn" onclick="saveTransaction()">Save</button>
+  <button class="btn" onclick="closeModal()">Close</button>
+</div>
+
+<div class="floating fade-in" id="settingsModal">
+  <h3 id="settingsTitle">Settings</h3>
+  <label>Language:
+    <select id="langSelect" onchange="changeLang()">
+      <option value="en">English</option>
+      <option value="ru">Русский</option>
+    </select>
+  </label><br><br>
+  <label>Currency:
+    <input type="text" id="currencyInput" maxlength="3" value="$">
+  </label><br><br>
+  <button class="btn" onclick="saveSettings()">Save</button>
+</div>
+
+<nav>
+  <button onclick="go('index.html')" id="homeTab">🏠</button>
+  <button onclick="go('accounts.html')" id="accountsTab">💳</button>
+  <button onclick="go('analytics.html')" id="analyticsTab">📊</button>
+</nav>
+
+<script>
+let lang = localStorage.getItem("lang") || "en";
+let currency = localStorage.getItem("currency") || "$";
+let accounts = JSON.parse(localStorage.getItem("accounts")||"[]");
+let transactions = JSON.parse(localStorage.getItem("transactions")||"[]");
+
+function updateBalance(){
+  let sum=0;transactions.forEach(t=>{sum+=t.type=="income"?t.amount:-t.amount;});
+  document.getElementById("totalBalance").innerText=currency+sum;
+}
+updateBalance();
+
+function go(p){window.location=p;}
+
+function showModal(type){
+  document.getElementById("transactionModal").style.display="block";
+  document.getElementById("modalTitle").innerText = type=="income"?texts.addIncome[lang]:texts.addExpense[lang];
+  document.getElementById("transactionModal").setAttribute("data-type",type);
+  fillSelects();
+}
+function closeModal(){document.getElementById("transactionModal").style.display="none";}
+
+function fillSelects(){
+  let sel=document.getElementById("accountSelect");sel.innerHTML="";
+  accounts.forEach((a,i)=>{let opt=document.createElement("option");opt.value=i;opt.text=a.name;sel.add(opt);});
+  let cat=document.getElementById("categorySelect");cat.innerHTML="";
+  ["Work","Extra","Fun","Health","Family"].forEach(c=>{let opt=document.createElement("option");opt.value=c;opt.text=c;cat.add(opt);});
+}
+
+function saveTransaction(){
+  let type=document.getElementById("transactionModal").getAttribute("data-type");
+  let amount=parseFloat(document.getElementById("amount").value)||0;
+  let comment=document.getElementById("comment").value;
+  let acc=document.getElementById("accountSelect").value;
+  let cat=document.getElementById("categorySelect").value;
+  if(amount<=0)return;
+  transactions.push({type,amount,comment,acc,cat,date:Date.now()});
+  localStorage.setItem("transactions",JSON.stringify(transactions));
+  closeModal();updateBalance();
+}
+
+function saveSettings(){
+  lang=document.getElementById("langSelect").value;
+  localStorage.setItem("lang",lang);
+  currency=document.getElementById("currencyInput").value||"$";
+  localStorage.setItem("currency",currency);
+  document.getElementById("settingsModal").style.display="none";
+  applyLang();
+  updateBalance();
+}
+function changeLang(){lang=document.getElementById("langSelect").value;applyLang();}
+function applyLang(){
+  document.getElementById("title").innerText=texts.title[lang];
+  document.getElementById("incomeBtn").innerText=texts.income[lang];
+  document.getElementById("expenseBtn").innerText=texts.expense[lang];
+  document.getElementById("settingsBtn").innerText=texts.settings[lang];
+  document.getElementById("settingsTitle").innerText=texts.settings[lang];
+}
+const texts={
+  title:{en:"Finance Tracker",ru:"Финансы"},
+  income:{en:"+ Income",ru:"+ Доход"},
+  expense:{en:"- Expense",ru:"- Расход"},
+  settings:{en:"Settings",ru:"Настройки"},
+  addIncome:{en:"Add Income",ru:"Добавить доход"},
+  addExpense:{en:"Add Expense",ru:"Добавить расход"}
+};
+applyLang();
+
+document.getElementById("incomeBtn").onclick=()=>showModal("income");
+document.getElementById("expenseBtn").onclick=()=>showModal("expense");
+document.getElementById("settingsBtn").onclick=()=>{document.getElementById("settingsModal").style.display="block";document.getElementById("langSelect").value=lang;document.getElementById("currencyInput").value=currency;}
+</script>
+</body>
+</html>
