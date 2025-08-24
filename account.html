@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Finance Tracker - Accounts</title>
+<style>
+  body{margin:0;background:#2f2f2f;color:#fff;font-family:sans-serif;}
+  header{text-align:center;padding:1rem;font-size:1.3rem;}
+  .list{padding:1rem;}
+  .card{background:#3b3b3b;padding:1rem;border-radius:10px;margin:.5rem 0;}
+  .btn{margin:.5rem 0;padding:.5rem 1rem;border:none;border-radius:8px;background:#444;color:#fff;cursor:pointer;}
+  nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#1f1f1f;padding:.5rem 0;}
+  nav button{background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;}
+  .floating{position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#3b3b3b;padding:1rem;border-radius:12px;display:none;width:80%;}
+  .input{width:90%;margin:.3rem auto;padding:.5rem;border-radius:6px;border:none;}
+</style>
+</head>
+<body>
+<header id="title">Accounts</header>
+<div class="list" id="accountList"></div>
+<button class="btn" onclick="openModal()">+ Add Account</button>
+
+<div class="floating" id="accountModal">
+  <h3 id="modalTitle">New Account</h3>
+  <input class="input" id="accName" placeholder="Name">
+  <input class="input" id="accDesc" placeholder="Description">
+  <input class="input" id="accSum" type="number" placeholder="Start sum">
+  <select class="input" id="accType">
+    <option value="cash">Cash</option>
+    <option value="bank">Bank</option>
+  </select>
+  <button class="btn" onclick="saveAccount()">Save</button>
+  <button class="btn" onclick="closeModal()">Close</button>
+</div>
+
+<nav>
+  <button onclick="go('index.html')">🏠</button>
+  <button onclick="go('accounts.html')">💳</button>
+  <button onclick="go('analytics.html')">📊</button>
+</nav>
+
+<script>
+let accounts=JSON.parse(localStorage.getItem("accounts")||"[]");
+let currency=localStorage.getItem("currency")||"$";
+
+function render(){
+  let div=document.getElementById("accountList");div.innerHTML="";
+  accounts.forEach((a,i)=>{
+    let el=document.createElement("div");el.className="card";
+    el.innerText=a.name+" ("+a.type+") - "+currency+a.sum;
+    div.appendChild(el);
+  });
+}
+render();
+
+function go(p){window.location=p;}
+function openModal(){document.getElementById("accountModal").style.display="block";}
+function closeModal(){document.getElementById("accountModal").style.display="none";}
+function saveAccount(){
+  let acc={name:accName.value,desc:accDesc.value,sum:parseFloat(accSum.value)||0,type:accType.value};
+  accounts.push(acc);
+  localStorage.setItem("accounts",JSON.stringify(accounts));
+  render();closeModal();
+}
+</script>
+</body>
+</html>
